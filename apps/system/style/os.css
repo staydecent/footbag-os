@@ -6,7 +6,17 @@ html, body {
   font-family: sans-serif;
   font-size: 10px;
 }
+body.loading {
+  background-color: #fc6;
+}
+body.online {
+  background-color: #396;
+}
+body.offline {
+  background-color: #f66;
+}
+
 pre {
   padding: 3vw;
-  font-size: calc(100vw / 30);
+  font-size: calc(100vw / 40);
 }
