@@ -14,23 +14,51 @@ window.addEventListener('online', function() {
     'HACKING':    'HACKING' // we be hacking
   };
 
-  var store = atom((newState) => {newState}, STATES.WAITING);
-  var timer = undefined;
+  var intervalID = undefined;
+  var timer = 0;
+  var bufferTime = 15;
+  var bufferStrTemplate = 'Starting hack session in 15s ...';
+
   var hackElm = document.getElementById('hacktivator');
+  var store = atom(newState => newState, '');
 
-  hackElm.textContent = 'Waiting for hackysack';
+  store.subscribe(function() {
+    console.log('state', store.getState());
+    document.body.className = store.getState().toLowerCase();
+
+    switch (store.getState()) {
+      case STATES.WAITING:
+        hackElm.textContent = 'Waiting for hackysack';
+        break;
+
+      case STATES.CHILLING:
+        hackElm.textContent = 'ZzZz';
+        break;
+
+      case STATES.BUFFERING:
+        hackElm.textContent = bufferStrTemplate;
+        break;
+
+      case STATES.HACKING:
+        hackElm.textContent = 'Hack session is in progress!';
+        break;
+    }
+  });
+
+  store.dispatch(STATES.WAITING);
+
   window.addEventListener('userproximity', proximity);
-
 
   function proximity(ev) {
     if (ev.near) {
       console.log('[Hacktivator] near', ev);
       navigator.vibrate(200);
       
-      // If BUFFERING timer is running, clear it
-      if (timer !== undefined) {
-        window.clearTimeout(timer);
-        timer = undefined;
+      // If BUFFERING intervalID is running, clear it
+      if (intervalID !== undefined) {
+        window.clearTimeout(intervalID);
+        intervalID = undefined;
+        timer = 0;
       }
 
       // Hack session is over, should we do something?
@@ -44,8 +72,21 @@ window.addEventListener('online', function() {
 
       // If hack is chilling, it's now been removed! Start session.
       if (store.getState() === STATES.CHILLING) {
-        timer = window.setTimeout(startHackSession, 15000);
+        store.dispatch(STATES.BUFFERING);
+        intervalID = window.setInterval(countdown, 1000);
       } 
+    }
+  }
+
+  function countdown() {
+    if (timer >= bufferTime) {
+      startHackSession();
+      window.clearInterval(intervalID);
+      intervalID = undefined;
+    } else {
+      timer = timer + 1;
+      console.log('[Hacktivator] countdown', timer);
+      hackElm.textContent = bufferStrTemplate.replace('15', bufferTime - timer);
     }
   }
 
@@ -66,10 +107,7 @@ window.addEventListener('online', function() {
       data: JSON.stringify(payload),
       type: 'json',
       crossOrigin: true,
-      error: function(err) {
-        console.error('FootBag err', err);
-      },
-      success: function(resp) {
+      complete: function(resp) {
         store.dispatch(STATES.HACKING);
         console.log('FootBag success!', resp);
       }
