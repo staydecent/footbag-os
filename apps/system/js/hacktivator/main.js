@@ -96,7 +96,7 @@ window.addEventListener('online', function() {
       "channel": "#hack",
       "username": "hacktivator",
       "icon_emoji": ":hackysack:",
-      "link_names": 0
+      "link_names": 1
     };
 
     console.log('payload', payload);
